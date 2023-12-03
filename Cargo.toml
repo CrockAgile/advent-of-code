@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "2023/01",
+]
+
+[workspace.lints.rust]
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "deny"
+pedantic = "deny"
