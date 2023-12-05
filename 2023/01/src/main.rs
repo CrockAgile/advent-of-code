@@ -30,19 +30,58 @@ fn main() {
 
 fn calibrate<'a>(s: impl Iterator<Item = &'a str>) -> usize {
     #[inline]
-    fn digit_val(b: u8) -> u8 {
-        b - b'0'
+    fn parse<const IS_REV: bool>(line: &[u8]) -> Option<u8> {
+        const PARSE_TABLE: &[(u8, &[u8])] = &[
+            (1, "one".as_bytes()),
+            (2, "two".as_bytes()),
+            (3, "three".as_bytes()),
+            (4, "four".as_bytes()),
+            (5, "five".as_bytes()),
+            (6, "six".as_bytes()),
+            (7, "seven".as_bytes()),
+            (8, "eight".as_bytes()),
+            (9, "nine".as_bytes()),
+        ];
+
+        for (value, s) in PARSE_TABLE {
+            let is_match = if IS_REV {
+                line.starts_with(s)
+            } else {
+                line.ends_with(s)
+            };
+            if is_match {
+                return Some(*value);
+            }
+        }
+
+        let first = if IS_REV { line.first() } else { line.last() };
+        if let Some(&value) = first {
+            if value.is_ascii_digit() {
+                return Some(value - b'0');
+            }
+        }
+
+        None
     }
 
     let mut result = 0usize;
 
     for line in s {
+        dbg!(line);
         let bytes = line.as_bytes();
-        let first = bytes.iter().find(|b| b.is_ascii_digit()).unwrap();
-        let last = bytes.iter().rev().find(|b| b.is_ascii_digit()).unwrap();
-        let first = digit_val(*first);
-        let last = digit_val(*last);
-        result += (first * 10 + last) as usize;
+        let len = bytes.len();
+        let first = (1..=len)
+            .map(|i| &bytes[..i])
+            .find_map(parse::<false>)
+            .unwrap();
+
+        let last = (1..len)
+            .map(|i| &bytes[len - i..])
+            .find_map(parse::<true>)
+            .unwrap_or(first);
+
+        let answer = (first * 10 + last) as usize;
+        result += answer;
     }
 
     result
@@ -57,5 +96,20 @@ mod tests {
         let input = ["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"];
 
         assert_eq!(142, calibrate(input.into_iter()));
+    }
+
+    #[test]
+    fn part_two() {
+        let input = [
+            "two1nine",
+            "eightwothree",
+            "abcone2threexyz",
+            "xtwone3four",
+            "4nineeightseven2",
+            "zoneight234",
+            "7pqrstsixteen",
+        ];
+
+        assert_eq!(281, calibrate(input.into_iter()));
     }
 }
