@@ -67,7 +67,6 @@ fn calibrate<'a>(s: impl Iterator<Item = &'a str>) -> usize {
     let mut result = 0usize;
 
     for line in s {
-        dbg!(line);
         let bytes = line.as_bytes();
         let len = bytes.len();
         let first = (1..=len)
